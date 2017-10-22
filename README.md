@@ -20,15 +20,49 @@ The example will take a very basic monolithic stack template that creates the
 following:
 
 * VPC (192.168.0.0/16) called _${AWS::StackName}_
-* Public subnet (192.168.0.0/24) called _${AWS::StackName}_*-public*
+* Public subnet (192.168.0.0/18) called _${AWS::StackName}_*-public*
 * Private subnet (192.168.0.1/24) called _${AWS::StackName}_*-private*
 * An external security group that allows HTTP and HTTPS to the public subnet.
   Called _${AWS::StackName}_*-external*.
 * An internal security group that allows TCP/8080 from the public subnet to
   the private subnet. Called _${AWS::StackName}_*-internal*.
 
+An alternative method that will break out this template into two templates will
+be presented.
+
 ## Aims
+
+Provide a basic example of of a stack that has been converted into more
+more generic and reusable stacks along with enough documentation to get
+readers of this document started on writing more advanced infrastructure based
+on the same principles.
 
 ## Method
 
+Firstly split the resources that are normally in the VPC tab of the AWS console
+into a stack called **vpc**.  This will include the VPC and the public and
+private subnets.  The identity of the resources created in this stack will be
+[exported](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-exports.html)
+for consumption by the other stack.
+
+This first stack will also have a parameter asking if the resources should be
+created from scratch or if the output exports should all be the identities of
+resources within an already existing VPC.  The advantage of this approach is
+that resources created in the subsequent stack or stacks (to be described
+shortly) can be run from templates unaltered and refer to either VPC resources
+that have recently been created or were created by a method other than
+CloudFormation that are expected to be added to.
+
+The subsequent stack will be called **ec2** and will contain the security
+groups.  These will refer to resources in the **vpc** stack by referring to
+the resource identities via the
+[`Fn::ImportValue`](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-importvalue.html)
+function.  There will also be documentation and examples included in the
+[Results](#results) section.
+
 ## Results
+
+## Limitations
+
+Currently this example only covers the creation of a two AZ environment.  It
+will be expanded upon to increase this in future.
