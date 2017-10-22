@@ -20,15 +20,17 @@ The example will take a very basic monolithic stack template that creates the
 following:
 
 * VPC (192.168.0.0/16) called _${AWS::StackName}_
-* Public subnet (192.168.0.0/18) called _${AWS::StackName}_*-public*
-* Private subnet (192.168.0.1/24) called _${AWS::StackName}_*-private*
+* Public zone A subnet (192.168.0.0/24) called _${AWS::StackName}_*-publicA*
+* Public zone B subnet (192.168.1.0/24) called _${AWS::StackName}_*-publicB*
+* Private zone A subnet (192.168.0.2/24) called _${AWS::StackName}_*-privateA*
+* Private zone B subnet (192.168.0.3/24) called _${AWS::StackName}_*-privateB*
 * An external security group that allows HTTP and HTTPS to the public subnet.
   Called _${AWS::StackName}_*-external*.
 * An internal security group that allows TCP/8080 from the public subnet to
   the private subnet. Called _${AWS::StackName}_*-internal*.
 
-An alternative method that will break out this template into two templates will
-be presented.
+An alternative method that will break out this template into two reusable
+templates will be presented.
 
 ## Aims
 
@@ -62,7 +64,14 @@ function.  There will also be documentation and examples included in the
 
 ## Results
 
+The [`monolithic-stack.yaml`](monolithic-stack.yaml) file was split into two
+files called [`vpc.yaml`] and [`ec2.yaml`].
+
 ## Limitations
 
-Currently this example only covers the creation of a two AZ environment.  It
-will be expanded upon to increase this in future.
+Currently this example only covers the creation of two a public subnet and
+a private subnet within two AZs.  Support for additional AZs
+will be added in future.
+
+There also is not functional difference between the public (edge) subnet and
+the private (inside) subnet.  Again this will be expanded upon in future.
