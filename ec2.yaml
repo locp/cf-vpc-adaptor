@@ -1,50 +1,15 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
+
 Description: 'Monolithic Stack'
+
+Parameters:
+  VpcStack:
+    Description: >
+      The name of the CloudFormation stack to import VPC resources from.
+    Type: String
+
 Resources:
-  VPC:
-    Type: 'AWS::EC2::VPC'
-    Properties:
-      CidrBlock: '192.168.0.0/16'
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}'
-  PublicSubnetA:
-    Type: 'AWS::EC2::Subnet'
-    Properties:
-      AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: '192.168.0.0/24'
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-publicA"
-      VpcId: !Ref VPC
-  PublicSubnetB:
-    Type: 'AWS::EC2::Subnet'
-    Properties:
-      AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: '192.168.1.0/24'
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-publicB"
-      VpcId: !Ref VPC
-  PrivateSubnetA:
-    Type: 'AWS::EC2::Subnet'
-    Properties:
-      AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: '192.168.2.0/24'
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-privateA"
-      VpcId: !Ref VPC
-  PrivateSubnetB:
-    Type: 'AWS::EC2::Subnet'
-    Properties:
-      AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: '192.168.3.0/24'
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-privateB"
-      VpcId: !Ref VPC
   ExternalSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -63,7 +28,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-external"
-      VpcId: !Ref VPC
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${VpcStack}-vpc"
   InternalSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -74,11 +41,17 @@ Resources:
         - IpProtocol: tcp
           FromPort: '8080'
           ToPort: '8080'
-          CidrIp:
-            Fn::GetAtt:
-              - VPC
-              - CidrBlock
+          CidrIp: 10.0.0.0/8
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 172.16.0.0/12
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 192.168.0.0/16
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-internal"
-      VpcId: !Ref VPC
+      VpcId:
+        Fn::ImportValue: !Sub "${VpcStack}-vpc"
