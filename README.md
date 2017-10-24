@@ -81,7 +81,15 @@ values for [RFC 1918](https://en.wikipedia.org/wiki/Private_network) subnets.
 
 For a VPC stack called `example`, the following values would be exported.
 
-|
+|Exported Resource Name  |Description               |Example Value                  |
+|------------------------|--------------------------|-------------------------------|
+|example-vpc             |The ID of the VPC         |vpc-7cd58215                   |
+|example-private-subnet-a|ID of Zone A Edge Subnet  |subnet-0de0a176                |
+|example-private-subnet-b|ID of Zone B Edge Subnet  |subnet-ba3eacf7                |
+|example-private-subnets |CSV of Edge Subnets       |subnet-0de0a176,subnet-ba3eacf7|
+|example-public-subnet-a |ID of Zone A Inside Subnet|subnet-86e3a2fd                |
+|example-public-subnet-b |ID of Zone A Inside Subnet|subnet-7722b03a                |
+|example-public-subnets  |CSV of Inside Subnets     |subnet-86e3a2fd,subnet-7722b03a|
 
 ## Limitations
 
