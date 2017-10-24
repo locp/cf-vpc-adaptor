@@ -65,7 +65,7 @@ function.  There will also be documentation and examples included in the
 ## Results
 
 The [`monolithic-stack.yaml`](monolithic-stack.yaml) file was split into two
-files called [`vpc.yaml`] and [`ec2.yaml`].
+files called [`vpc.yaml`](vpc.yaml) and [`ec2.yaml`](ec2.yaml).
 
 ## Limitations
 

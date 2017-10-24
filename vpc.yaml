@@ -1,0 +1,162 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Create & Export Reusable VPC Resources'
+
+Parameters:
+  CreateNewVpcResources:
+    AllowedValues:
+      - true
+      - false
+    Default: true
+    Description: >
+      Set to true for new resources be created or false to use existing
+      resources.
+    Type: String
+  ExistingVPC:
+    Description: >
+      An existing VPC that will become an exported resource.  This value is
+      ignored if CreateNewResources is set to true.
+    Type: 'AWS::EC2::VPC::Id'
+  ExistingPrivateSubnetA:
+    Description: >
+      An existing private (inside) subnet in AZ A that will become an
+      exported resource.  This value is ignored if CreateNewResources is set to
+      true.
+    Type: 'AWS::EC2::Subnet::Id'
+  ExistingPrivateSubnetB:
+    Description: >
+      An existing private (inside) subnet in AZ B that will become an
+      exported resource.  This value is ignored if CreateNewResources is set to
+      true.
+    Type: 'AWS::EC2::Subnet::Id'
+  ExistingPublicSubnetA:
+    Description: >
+      An existing public facing (edge) subnet in AZ A that will become an
+      exported resource.  This value is ignored if CreateNewResources is set to
+      true.
+    Type: 'AWS::EC2::Subnet::Id'
+  ExistingPublicSubnetB:
+    Description: >
+      An existing public facing (edge) subnet in AZ B that will become an
+      exported resource.  This value is ignored if CreateNewResources is set to
+      true.
+    Type: 'AWS::EC2::Subnet::Id'
+
+Conditions:
+  CreateNewResources: !Equals [ !Ref CreateNewVpcResources, 'true' ]
+
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Condition: CreateNewResources
+    Properties:
+      CidrBlock: '192.168.0.0/16'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}'
+  PublicSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Condition: CreateNewResources
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: '192.168.0.0/24'
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-publicA"
+      VpcId: !Ref VPC
+  PublicSubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Condition: CreateNewResources
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: '192.168.1.0/24'
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-publicB"
+      VpcId: !Ref VPC
+  PrivateSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Condition: CreateNewResources
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: '192.168.2.0/24'
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-privateA"
+      VpcId: !Ref VPC
+  PrivateSubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Condition: CreateNewResources
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: '192.168.3.0/24'
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-privateB"
+      VpcId: !Ref VPC
+
+Outputs:
+  VPC:
+    Description: The ID of the VPC
+    Value:
+      Fn::If:
+        - CreateNewResources
+        - !Ref VPC
+        - !Ref ExistingVPC
+    Export:
+      Name: !Sub "${AWS::StackName}-vpc"
+  PrivateSubnetA:
+    Description: The ID of the Zone A Public/Edge Subnet
+    Value:
+      Fn::If:
+        - CreateNewResources
+        - !Ref PrivateSubnetA
+        - !Ref ExistingPrivateSubnetA
+    Export:
+      Name: !Sub "${AWS::StackName}-private-subnet-a"
+  PrivateSubnetB:
+    Description: The ID of the Zone B Public/Edge Subnet
+    Value:
+      Fn::If:
+        - CreateNewResources
+        - !Ref PrivateSubnetB
+        - !Ref ExistingPrivateSubnetB
+    Export:
+      Name: !Sub "${AWS::StackName}-private-subnet-b"
+  PrivateSubnets:
+    Description: A CSV List of the Private Subnets
+    Value:
+      Fn::If:
+        - CreateNewResources
+        - !Sub "${PrivateSubnetA},${PrivateSubnetB}"
+        - !Sub "${ExistingPrivateSubnetA},${ExistingPrivateSubnetB}"
+    Export:
+      Name: !Sub "${AWS::StackName}-private-subnets"
+  PublicSubnetA:
+    Description: The ID of the Zone A Public/Inside Subnet
+    Value:
+      Fn::If:
+        - CreateNewResources
+        - !Ref PublicSubnetA
+        - !Ref ExistingPublicSubnetA
+    Export:
+      Name: !Sub "${AWS::StackName}-public-subnet-a"
+  PublicSubnetB:
+    Description: The ID of the Zone B Public/Inside Subnet
+    Value:
+      Fn::If:
+        - CreateNewResources
+        - !Ref PublicSubnetB
+        - !Ref ExistingPublicSubnetB
+    Export:
+      Name: !Sub "${AWS::StackName}-public-subnet-b"
+  PublicSubnets:
+    Description: A CSV List of the Public Subnets
+    Value:
+      Fn::If:
+        - CreateNewResources
+        - !Sub "${PublicSubnetA},${PublicSubnetB}"
+        - !Sub "${ExistingPublicSubnetA},${ExistingPublicSubnetB}"
+    Export:
+      Name: !Sub "${AWS::StackName}-public-subnets"
