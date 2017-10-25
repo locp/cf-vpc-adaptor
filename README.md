@@ -44,40 +44,31 @@ following AWS suggested best practices for CloudFormation, namely
 ## Method
 
 Firstly split the resources that are normally in the VPC tab of the AWS console
-into a stack called **vpc**.  This will include the VPC and the public and
+into a stack called **vpc** for creating a new VPC and **vpc-adaptor** for
+referring to an existing VPC.  This will include both the VPC and the public and
 private subnets.  The identity of the resources created in this stack will be
 [exported](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-exports.html)
 for consumption by the other stack.
 
-This first stack will also have a parameter asking if the resources should be
-created from scratch or if the output exports should all be the identities of
-resources within an already existing VPC.  The advantage of this approach is
-that resources created in the subsequent stack or stacks (to be described
-shortly) can be run from templates unaltered and refer to either VPC resources
-that have recently been created or were created by a method other than
-CloudFormation.
+The advantage of this approach is that resources created in the subsequent
+stack or stacks (to be described shortly) can be run from templates unaltered
+and refer to either VPC resources that have recently been created or were
+created by a method other than CloudFormation.
 
 The subsequent stack will be called **ec2** and will contain the security
-groups.  These will refer to resources in the **vpc** stack by referring to
-the resource identities via the
+groups.  These will integrate with resources in the **vpc/vpc-adaptor** stack
+by referring to the resource identities via the
 [`Fn::ImportValue`](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-importvalue.html)
 function.  There will also be documentation and examples included in the
 [Results](#results) section.
 
 ## Results
 
-The [`monolithic-stack.yaml`](monolithic-stack.yaml) file was split into two
-files called [`vpc.yaml`](vpc.yaml) and [`ec2.yaml`](ec2.yaml).
-
-The `vpc` stack is parameterised allowing the user to specify if new
-resources are to be created or to select existing resources within the account
-and region.  One short coming of CloudFormation is that the AWS-Specific
-parameter types *MUST* have a value selected even if you want to create new
-resources.  Also, in the original monolithic stack, the CIDR address was
-gathered using the `Fn::GetAtt` function.  This function
-[can not call another function](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html#w2ab2c21c28c27c13)
-for the logical resource name.  Therefore we have had to hardcode in the
-values for [RFC 1918](https://en.wikipedia.org/wiki/Private_network) subnets.
+The [`monolithic-stack.yaml`](monolithic-stack.yaml) file was split into
+multiple files called [`vpc.yaml`](vpc.yaml) (for creating a new VPC)
+[`vpc-adaptor.yaml`](vpc-adaptor.yaml) (for working with an existing VPC)
+and [`ec2.yaml`](ec2.yaml) which is a small example of importing values from
+either of the VPC stacks.
 
 For a VPC stack called `example`, the following values would be exported.
 
@@ -91,6 +82,13 @@ For a VPC stack called `example`, the following values would be exported.
 |example-public-subnet-b |ID of Zone A Inside Subnet|subnet-7722b03a                |
 |example-public-subnets  |CSV of Inside Subnets     |subnet-86e3a2fd,subnet-7722b03a|
 
+Therefore you could use `vpc.yaml` to create a stack called **example** and then
+use `vpc-adaptor.yaml` to create a stack called **example2** that refers to
+the resources created in the **example** stack.  The outputs of the two stacks
+should be identical.  Subsequently, creating two stacks using the `ec2.yaml`
+template and referring each of them to **example** and **example2** would also
+result in identical resources being created within the stacks.
+
 ## Limitations
 
 Currently this example only covers the creation of a public subnet and
@@ -99,3 +97,17 @@ will be added in future.
 
 There also is not functional difference between the public (edge) subnet and
 the private (inside) subnet.  Again this will be expanded upon in future.
+
+During the development process, it was attempted to create a single template for
+the VPC that would allow the user to select as to whether a new VPC should be
+created or use existing resources.  One side effect of this was that existing
+resources needed to be selected (even though they would be logically ignored)
+when creating a new VPC.  This would of course be impossible if the user was
+deploying into an account/region that currently had no previous VPCs
+configured.
+
+In the original monolithic stack, the CIDR address was
+gathered using the `Fn::GetAtt` function.  This function
+[can not call another function](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html#w2ab2c21c28c27c13)
+for the logical resource name.  Therefore we have had to hardcode in the
+values for [RFC 1918](https://en.wikipedia.org/wiki/Private_network) subnets.

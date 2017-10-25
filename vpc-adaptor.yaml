@@ -1,0 +1,82 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Create & Export Reusable VPC Resources'
+
+Parameters:
+  ExistingVPC:
+    Description: >
+      An existing VPC that will become an exported resource.
+    Type: 'AWS::EC2::VPC::Id'
+  ExistingPrivateSubnetA:
+    Description: >
+      An existing private (inside) subnet in AZ A that will become an
+      exported resource.
+    Type: 'AWS::EC2::Subnet::Id'
+  ExistingPrivateSubnetB:
+    Description: >
+      An existing private (inside) subnet in AZ B that will become an
+      exported resource.
+    Type: 'AWS::EC2::Subnet::Id'
+  ExistingPublicSubnetA:
+    Description: >
+      An existing public facing (edge) subnet in AZ A that will become an
+      exported resource.
+    Type: 'AWS::EC2::Subnet::Id'
+  ExistingPublicSubnetB:
+    Description: >
+      An existing public facing (edge) subnet in AZ B that will become an
+      exported resource.
+    Type: 'AWS::EC2::Subnet::Id'
+
+Conditions:
+  AlwaysFalse: !Equals [ 'false', 'true' ]
+
+Resources:
+  DummyResource:
+    # This resource does not get created, but CloudFormation requires that
+    # at least one resource must be defined.
+    Type: 'AWS::EC2::VPC'
+    Condition: AlwaysFalse
+    Properties:
+      CidrBlock: '192.168.0.0/16'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}'
+
+Outputs:
+  VPC:
+    Description: The ID of the VPC
+    Value: !Ref ExistingVPC
+    Export:
+      Name: !Sub "${AWS::StackName}-vpc"
+  PrivateSubnetA:
+    Description: The ID of the Zone A Public/Edge Subnet
+    Value: !Ref ExistingPrivateSubnetA
+    Export:
+      Name: !Sub "${AWS::StackName}-private-subnet-a"
+  PrivateSubnetB:
+    Description: The ID of the Zone B Public/Edge Subnet
+    Value: !Ref ExistingPrivateSubnetB
+    Export:
+      Name: !Sub "${AWS::StackName}-private-subnet-b"
+  PrivateSubnets:
+    Description: A CSV List of the Private Subnets
+    Value: !Sub "${ExistingPrivateSubnetA},${ExistingPrivateSubnetB}"
+    Export:
+      Name: !Sub "${AWS::StackName}-private-subnets"
+  PublicSubnetA:
+    Description: The ID of the Zone A Public/Inside Subnet
+    Value: !Ref ExistingPublicSubnetA
+    Export:
+      Name: !Sub "${AWS::StackName}-public-subnet-a"
+  PublicSubnetB:
+    Description: The ID of the Zone B Public/Inside Subnet
+    Value: !Ref ExistingPublicSubnetB
+    Export:
+      Name: !Sub "${AWS::StackName}-public-subnet-b"
+  PublicSubnets:
+    Description: A CSV List of the Public Subnets
+    Value: !Sub "${ExistingPublicSubnetA},${ExistingPublicSubnetB}"
+    Export:
+      Name: !Sub "${AWS::StackName}-public-subnets"

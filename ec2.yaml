@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'Monolithic Stack'
+Description: 'Create SecurityGroups that import values from a specified stack'
 
 Parameters:
   VpcStack:
