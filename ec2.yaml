@@ -1,0 +1,57 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Create SecurityGroups that import values from a specified stack'
+
+Parameters:
+  VpcStack:
+    Description: >
+      The name of the CloudFormation stack to import VPC resources from.
+    Type: String
+
+Resources:
+  ExternalSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:
+        !Sub "${AWS::StackName}-external"
+      GroupDescription: External security group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-external"
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${VpcStack}-vpc"
+  InternalSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:
+        !Sub "${AWS::StackName}-internal"
+      GroupDescription: Internal security group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 10.0.0.0/8
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 172.16.0.0/12
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 192.168.0.0/16
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-internal"
+      VpcId:
+        Fn::ImportValue: !Sub "${VpcStack}-vpc"
